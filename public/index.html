@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Interactive Live</title>
+    <style>
+        body {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background-color: transparent; /* Transparent for OBS */
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+
+        .player-bubble {
+            position: absolute; top: -50px;
+            background: #ff0050; padding: 10px 20px;
+            border-radius: 30px; font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            animation: fall linear forwards;
+        }
+
+        .gift-alert {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: #00f2fe; color: black;
+            padding: 30px; border-radius: 20px;
+            font-size: 40px; font-weight: 900;
+            text-align: center;
+            box-shadow: 0 0 50px #00f2fe;
+            animation: popUp 3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes fall {
+            0% { top: -50px; transform: rotate(calc(-15deg + 30deg * var(--random))); }
+            100% { top: 110vh; transform: rotate(calc(-15deg + 30deg * var(--random))); }
+        }
+
+        @keyframes popUp {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            15% { transform: translate(-50%, -50%) scale(1.1); }
+            30% { transform: translate(-50%, -50%) scale(1); }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('chat', (data) => {
+            const bubble = document.createElement('div');
+            bubble.className = 'player-bubble';
+            bubble.innerText = `${data.username}: ${data.comment}`;
+            
+            const randomX = Math.random() * 80; 
+            const randomDuration = 3 + Math.random() * 4; 
+            
+            bubble.style.left = `${randomX}vw`;
+            bubble.style.animationDuration = `${randomDuration}s`;
+            bubble.style.setProperty('--random', Math.random());
+
+            document.body.appendChild(bubble);
+
+            setTimeout(() => { bubble.remove(); }, randomDuration * 1000);
+        });
+
+        socket.on('gift', (data) => {
+            const alert = document.createElement('div');
+            alert.className = 'gift-alert';
+            alert.innerHTML = `🔥 ${data.username.toUpperCase()} 🔥<br>Sent ${data.amount}x ${data.giftName}!`;
+            
+            document.body.appendChild(alert);
+
+            setTimeout(() => { alert.remove(); }, 3000);
+        });
+    </script>
+</body>
+</html>
